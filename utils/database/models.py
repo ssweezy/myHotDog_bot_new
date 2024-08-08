@@ -20,6 +20,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
+    tg_url: Mapped[str] = mapped_column(String(50))
     tg_username: Mapped[str] = mapped_column(String(30), default=f'')
     role: Mapped[str] = mapped_column(String(20))
     category: Mapped[str] = mapped_column(String(20))
@@ -33,6 +34,14 @@ class User(Base):
     points: Mapped[int] = mapped_column(default=0)
 
 
+# таблица забаненных пользователей
+class BanList(Base):
+    __tablename__ = 'banned_users'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tg_id = mapped_column(BigInteger)
+
+
 # # таблица с настройками текста и тд
 # class Setting(Base):
 #     __tablename__ = 'settings'
@@ -42,15 +51,13 @@ class User(Base):
 #     emp_menu_text: Mapped[str] = mapped_column(String(300), default="<b>МЕНЮ</b>")
 #
 #
-# # таблица ролей и паролей
-# class Role(Base):
-#     __tablename__ = 'roles'
-#
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     name: Mapped[str] = mapped_column(String(30))
-#     password: Mapped[str] = mapped_column(String(20))
-#
+# таблица ролей и паролей
+class Role(Base):
+    __tablename__ = 'roles'
 
+    id: Mapped[int] = mapped_column(primary_key=True)
+    role_name: Mapped[str] = mapped_column(String(30))
+    role_password: Mapped[str] = mapped_column(String(20))
 
 
 # таблица с file_id видео обучения

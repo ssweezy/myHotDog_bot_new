@@ -1,10 +1,12 @@
 TOKEN = '6563741405:AAEh2oZbCAPiMsocoUgbroDNGNe6pYsBvPA'
-PASSWORD_EMP = 'MHDBNU'
-PASSWORD_ADMIN = 'MHDBNA#@'
-PASSWORD_KHARUN = 'KHARUNTOP'
+PASSWORD_EMP = 'a'
+PASSWORD_ADMIN = 'ab'
+PASSWORD_BOSS = 'x'
 
-ADM_MENU_TEXT = "<b>В вашем распоряжении следующие функции</b>"
-EMP_MENU_TEXT = "<b>МЕНЮ</b>"
+
+EMP_MENU_TEXT = "<b>МЕНЮ СОТРУДНИКА</b>"
+ADM_MENU_TEXT = "<b>МЕНЮ УПРАВЛЯЮЩЕГО</b>"
+BOSS_MENU_TEXT = "<b>МЕНЮ ВЛАДЕЛЬЦА</b>"
 CHOOSE_EMP_TEXT = "<b>Выберите сотрудника</b>"
 
 

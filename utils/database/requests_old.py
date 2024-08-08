@@ -1,16 +1,17 @@
 from utils.database.models import async_session
-from utils.database.models import User, Video
-from sqlalchemy import select, update, delete
+from utils.database.models import User, Video, Role, BanList
+from sqlalchemy import select, update
 
 
 # добавление сотрудника в бд
 async def set_user(data):
-    tg_id, tg_username, role, category, name, surname, birthday, phone, reg_date, msg_id, chat_id = data
+    tg_id, tg_url, tg_username, role, category, name, surname, birthday, phone, reg_date, msg_id, chat_id = data
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
 
         if not user:
             session.add(User(tg_id=tg_id,
+                             tg_url=tg_url,
                              tg_username=tg_username,
                              role=role,
                              category=category,
@@ -46,10 +47,24 @@ async def get_user_info(tg_id: int):
         return await session.scalar(select(User).where(User.tg_id == tg_id))
 
 
-# получение всех сотрудников
-async def get_employees():
+# получение всех пользователей по выбранной категории
+async def get_by_user_category(category: str):
     async with async_session() as session:
-        return await session.scalars(select(User).where(User.category == "emp"))
+        return await session.scalars(select(User).where(User.category == category))
+
+
+# получение всех сотрудников
+async def get_all_users():
+    async with async_session() as session:
+        emp = await session.scalars(select(User).where(User.category == "emp"))
+        adm = await session.scalars(select(User).where(User.category == "adm"))
+        return emp, adm
+
+
+# получение подопечных управляющего
+async def get_adm_empls(role):
+    async with async_session() as session:
+        return await session.scalars(select(User).where(User.category == "emp" and User.role == role))
 
 
 # меняет количество очков пользователя используя его айди
@@ -78,7 +93,27 @@ async def update_file_id(video_num: int, new_file_id):
         await session.commit()
 
 
-# # получение всех доступных ролей
-# async def get_roles():
-#     async with async_session() as session:
-#         return await session.scalars(select(Role.role_name))
+# функция удаления из бд
+async def del_user(tg_id):
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        await session.delete(user)
+        await session.commit()
+
+
+# добавление в банлист
+async def add_to_banlist(tg_id):
+    async with async_session() as session:
+        session.add(BanList(tg_id=tg_id))
+        await session.commit()
+
+
+# получение всех, кто в банлисте
+async def get_banlist():
+    async with async_session() as session:
+        return await session.scalars(select(BanList.tg_id))
+
+
+
+# остановились на увольнении, нужно доработать функцию в boss/ations/fire.
+# также добавить обработку на коллбеки boss(там стоят префиксы для доп функций)

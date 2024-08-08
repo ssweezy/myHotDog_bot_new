@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 
 from utils.kb.inline_kb import emp_menu_kb, back_kb
 from utils.FSM import Learning
-from utils.database.requests import update_file_id
+from utils.database.requests_old import update_file_id
 
 router = Router()
 

@@ -7,7 +7,8 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 from utils.FSM import ChooseEmpTakePoints, Menu
-from utils.database.requests import get_user_info, update_user_points
+from utils.database.requests_old import get_user_info, update_user_points
+from utils.fucntions import menu_text
 from utils.kb.inline_kb import back_kb, all_emp_kb, acceptation_points, adm_menu_kb
 
 
@@ -21,7 +22,7 @@ async def ask_points_amount(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-# сохраняет количество баллов и спрашивает за что начисление
+# сохраняет количество баллов и спрашивает за что списание
 @router.message(ChooseEmpTakePoints.Points_amount)
 async def ask_msg_with_points(message: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
@@ -44,7 +45,7 @@ async def ask_msg_with_points(message: Message, state: FSMContext, bot: Bot):
         await state.set_state(ChooseEmpTakePoints.Points_amount)
 
 
-# подтверждение информации для зачисления баллов
+# подтверждение информации для СПИСАНИЯ баллов
 @router.message(ChooseEmpTakePoints.Msg_with_points)
 async def ask_msg_with_points(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(msg_to_send_with_points=message.text)
@@ -59,34 +60,36 @@ async def ask_msg_with_points(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(ChooseEmpTakePoints.Acceptation)
 
 
-# отправка баллов или отмена отправки, если отмена то возвращает меню выбора сотрудника
+# списание баллов или отмена списания, если отмена то возвращает меню выбора сотрудника
 @router.callback_query(ChooseEmpTakePoints.Acceptation)
 async def send_or_not(call: CallbackQuery, bot: Bot, state: FSMContext):
     data = await state.get_data()
-    user = await get_user_info(data["choose_emp_id"])
+    user = await get_user_info(data["choose_user_id"])
 
     # обработка при нажатии да
     if call.data == "yes_p":
-        await update_user_points(data["choose_emp_id"], (user.points - int(data["points_to_send"])))
+        await update_user_points(data["choose_user_id"], (user.points - int(data["points_to_send"])))
         points = [i for i in str(data["points_to_send"])]
 
         # проверка для подставления правильного склонения слова "баллов" или балла
         if ((int(points[-1]) == 0 or int(points[-1]) > 4) and int("".join(points)) < 21) or (int(points[-1]) > 4 or int(points[-1]) == 0):
-            await bot.send_message(text=f"У вас списалось <b>{data["points_to_send"]} баллов</b>"
+            await bot.edit_message_text(text=f"У вас списалось <b>{data["points_to_send"]} баллов</b>"
                                         f"\n<blockquote>{data["msg_to_send_with_points"]}</blockquote>",
-                                        chat_id=user.chat_id)
+                                        chat_id=user.chat_id,
+                                        message_id=user.msg_id,
+                                        reply_markup=back_kb)
         else:
-            await bot.send_message(text=f"У вас списалось <b>{data["points_to_send"]} балла</b>"
-                                        f"\n<blockquote>{data["msg_to_send_with_points"]}</blockquote>",
-                                   chat_id=user.chat_id)
+            await bot.edit_message_text(text=f"У вас списалось <b>{data["points_to_send"]} балла</b>"
+                                             f"\n<blockquote>{data["msg_to_send_with_points"]}</blockquote>",
+                                        chat_id=user.chat_id,
+                                        message_id=user.msg_id,
+                                        reply_markup=back_kb)
         await call.message.edit_text("<b>Баллы успешно списаны!</b>")  # информация об успешном зачислении
         sleep(2)
         # возвращение обычного меню
-        await call.message.edit_text("<b>В вашем распоряжении следующие функции</b>", reply_markup=adm_menu_kb)
-        await state.set_state(None)
+        await menu_text(data["category"], chat_id=call.from_user.id, message_id=data['msg_id'], bot=bot, state=state)
+
         await call.answer()
-
-
 
     # обработка при нажатии нет
     elif call.data == "no_p":
@@ -96,6 +99,6 @@ async def send_or_not(call: CallbackQuery, bot: Bot, state: FSMContext):
         sleep(0.5)
         await call.message.edit_text("<b>Отмена списания...</b>")
         sleep(0.5)
-        await call.message.edit_text("<b><b>Выберите сотрудника:</b></b>", reply_markup=await all_emp_kb())
-        await state.set_state(Menu.show_emp)
+        await menu_text(data["category"], chat_id=call.from_user.id, message_id=data['msg_id'], bot=bot, state=state)
+
         await call.answer()
